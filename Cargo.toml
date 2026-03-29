@@ -1,0 +1,84 @@
+[package]
+name = "rp2350_pio"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cortex-m = "0.7.7"
+cortex-m-rt = "0.7.5"
+embedded-hal = "1.0.0"
+panic-halt = "1.0.0"
+pio = "0.3.0"
+rp235x-hal = { version = "0.4.0", features = ["critical-section-impl"] }
+
+[[bin]]
+name = "blinky_cpu"
+path = "src/blinky_cpu.rs"
+
+[[bin]]
+name = "blinky"
+path = "src/blinky.rs"
+
+[[bin]]
+name = "blinky_setdir"
+path = "src/blinky_setdir.rs"
+
+[[bin]]
+name = "blinky_api"
+path = "src/blinky_api.rs"
+
+[[bin]]
+name = "blinky_1hz"
+path = "src/blinky_1hz.rs"
+
+[[bin]]
+name = "blinky_1hz_x"
+path = "src/blinky_1hz_x.rs"
+
+[[bin]]
+name = "blinky_1hz_xy"
+path = "src/blinky_1hz_xy.rs"
+
+[[bin]]
+name = "blinky_1hz_x_pll"
+path = "src/blinky_1hz_x_pll.rs"
+
+[[bin]]
+name = "blinky_1hz_xy_pll"
+path = "src/blinky_1hz_xy_pll.rs"
+
+[[bin]]
+name = "blinky_1hz_x_pll_toggle"
+path = "src/blinky_1hz_x_pll_toggle.rs"
+
+[[bin]]
+name = "blinky_1hz_sync"
+path = "src/blinky_1hz_sync.rs"
+
+[[bin]]
+name = "parallel_out"
+path = "src/parallel_out.rs"
+
+[[bin]]
+name = "pseudo_spi"
+path = "src/pseudo_spi.rs"
+
+[[bin]]
+name = "pseudo_spi_push"
+path = "src/pseudo_spi_push.rs"
+
+[[bin]]
+name = "dma_stream"
+path = "src/dma_stream.rs"
+
+[[bin]]
+name = "irq_blinky_1hz"
+path = "src/irq_blinky_1hz.rs"
+
+[[bin]]
+name = "irq_chain"
+path = "src/irq_chain.rs"
+
+[[bin]]
+name = "wait_jmppin"
+path = "src/wait_jmppin.rs"
