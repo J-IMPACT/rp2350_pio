@@ -114,3 +114,23 @@ path = "src/parallel_out_autopull.rs"
 [[bin]]
 name = "parallel_out_expression"
 path = "src/parallel_out_expression.rs"
+
+[[bin]]
+name = "parallel_in"
+path = "src/parallel_in.rs"
+
+[[bin]]
+name = "parallel_in_iffull"
+path = "src/parallel_in_iffull.rs"
+
+[[bin]]
+name = "parallel_in_autopush"
+path = "src/parallel_in_autopush.rs"
+
+[[bin]]
+name = "parallel_in_out_mov"
+path = "src/parallel_in_out_mov.rs"
+
+[[bin]]
+name = "mov_rx_fifo"
+path = "src/mov_rx_fifo.rs"
