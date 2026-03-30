@@ -52,6 +52,14 @@ name = "blinky_1hz_x_pll_toggle"
 path = "src/blinky_1hz_x_pll_toggle.rs"
 
 [[bin]]
+name = "blinky_1hz_x_pll_exec"
+path = "src/blinky_1hz_x_pll_exec.rs"
+
+[[bin]]
+name = "blinky_1hz_x_pll_pc"
+path = "src/blinky_1hz_x_pll_pc.rs"
+
+[[bin]]
 name = "blinky_1hz_sync"
 path = "src/blinky_1hz_sync.rs"
 
@@ -80,5 +88,29 @@ name = "irq_chain"
 path = "src/irq_chain.rs"
 
 [[bin]]
+name = "irq_chain_rel"
+path = "src/irq_chain_rel.rs"
+
+[[bin]]
+name = "irq_chain_block"
+path = "src/irq_chain_block.rs"
+
+[[bin]]
 name = "wait_jmppin"
 path = "src/wait_jmppin.rs"
+
+[[bin]]
+name = "parallel_out_mov"
+path = "src/parallel_out_mov.rs"
+
+[[bin]]
+name = "parallel_out_ifempty"
+path = "src/parallel_out_ifempty.rs"
+
+[[bin]]
+name = "parallel_out_autopull"
+path = "src/parallel_out_autopull.rs"
+
+[[bin]]
+name = "parallel_out_expression"
+path = "src/parallel_out_expression.rs"

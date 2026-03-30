@@ -48,29 +48,29 @@ fn main() -> ! {
     let _led3: Pin<_, FunctionPio0, _> = pins.gpio9.into_function();
 
     let program = pio::pio_asm!(
+        "mov pindirs, ~null",
         ".wrap_target",
         "   pull block",
-        "   set y, 7",
+        "   set x, 7",
         "out_pins:",
         "   out pins, 4",
-        "   set x, 31",
+        "   set y, 31",
         "delay:",
         "   nop [31]",
         "   nop [31]",
-        "   jmp x--, delay",
-        "   jmp y--, out_pins",
+        "   jmp y--, delay",
+        "   jmp x--, out_pins",
         ".wrap"
     );
 
     let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
     let installed = pio.install(&program.program).unwrap();
 
-    let (mut sm, _, mut tx) = hal::pio::PIOBuilder::from_installed_program(installed)
+    let (sm, _, mut tx) = hal::pio::PIOBuilder::from_installed_program(installed)
         .out_pins(BUS_BASE_PIN, BUS_WIDTH)
         .out_shift_direction(ShiftDirection::Right) // default
         .clock_divisor_fixed_point(60000, 0) // 2500Hz
         .build(sm0);
-    sm.set_pindirs((0..BUS_WIDTH as u8).map(|pin| (pin + BUS_BASE_PIN, hal::pio::PinDir::Output)));
     sm.start();
 
     let patterns: [u32; 2] = [

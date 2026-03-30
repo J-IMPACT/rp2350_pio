@@ -49,16 +49,13 @@ fn main() -> ! {
 
     let program = pio::pio_asm!(
         ".wrap_target",
-        "   pull block",
-        "   set y, 7",
-        "out_pins:",
+        "   pull ifempty",
         "   out pins, 4",
         "   set x, 31",
         "delay:",
         "   nop [31]",
         "   nop [31]",
         "   jmp x--, delay",
-        "   jmp y--, out_pins",
         ".wrap"
     );
 
@@ -68,6 +65,7 @@ fn main() -> ! {
     let (mut sm, _, mut tx) = hal::pio::PIOBuilder::from_installed_program(installed)
         .out_pins(BUS_BASE_PIN, BUS_WIDTH)
         .out_shift_direction(ShiftDirection::Right) // default
+        .pull_threshold(32) // default
         .clock_divisor_fixed_point(60000, 0) // 2500Hz
         .build(sm0);
     sm.set_pindirs((0..BUS_WIDTH as u8).map(|pin| (pin + BUS_BASE_PIN, hal::pio::PinDir::Output)));
