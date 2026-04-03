@@ -8,7 +8,6 @@ use rp235x_hal as hal;
 use hal::gpio::{FunctionPio0, FunctionSioOutput, Pin};
 use hal::pac::interrupt;
 use hal::pio::PIOExt;
-use hal::timer::Timer;
 use hal::Sio;
 
 use embedded_hal::delay::DelayNs;
@@ -52,7 +51,7 @@ fn main() -> ! {
         &mut watchdog
     ).unwrap();
 
-    let mut timer = Timer::new_timer0(
+    let mut timer = hal::timer::Timer::new_timer0(
         pac.TIMER0, 
         &mut pac.RESETS, 
         &clocks
