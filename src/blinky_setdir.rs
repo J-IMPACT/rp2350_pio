@@ -29,21 +29,21 @@ fn main() -> ! {
     let led_pin_id = led.id().num;
     
     let program = pio::pio_asm!(
+        "set pindirs, 1",
         ".wrap_target",
         "   set pins, 0 [31]",
         "   set pins, 1 [31]",
         ".wrap"
     );
 
-    let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
-    let installed = pio.install(&program.program).unwrap();
+    let (mut pio0, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let installed = pio0.install(&program.program).unwrap();
     let (int, frac) = (0, 0); // as slow as possible (0 is interpreted as 65536)
-    let (mut sm, _, _) = hal::pio::PIOBuilder::from_installed_program(installed)
-        .set_pins(led_pin_id, 1)
+    let (sm0, _, _) = hal::pio::PIOBuilder::from_installed_program(installed)
         .clock_divisor_fixed_point(int, frac)
+        .set_pins(led_pin_id, 1)
         .build(sm0);
-    sm.set_pindirs([(led_pin_id, hal::pio::PinDir::Output)]);
-    sm.start();
+    sm0.start();
 
     loop {}
 }

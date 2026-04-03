@@ -24,8 +24,8 @@ name = "blinky_setdir"
 path = "src/blinky_setdir.rs"
 
 [[bin]]
-name = "blinky_api"
-path = "src/blinky_api.rs"
+name = "blinky_struct"
+path = "src/blinky_struct.rs"
 
 [[bin]]
 name = "blinky_1hz"
