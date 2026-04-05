@@ -38,10 +38,11 @@ fn main() -> ! {
 
     let (mut pio0, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
     let installed = pio0.install(&program.program).unwrap();
+    
     let (int, frac) = (0, 0); // as slow as possible (0 is interpreted as 65536)
     let (sm0, _, _) = hal::pio::PIOBuilder::from_installed_program(installed)
-        .clock_divisor_fixed_point(int, frac)
         .set_pins(led_pin_id, 1)
+        .clock_divisor_fixed_point(int, frac)
         .build(sm0);
     sm0.start();
 

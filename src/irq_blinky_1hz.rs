@@ -5,12 +5,11 @@ use panic_halt as _;
 
 use rp235x_hal as hal;
 
-use hal::gpio::{FunctionPio0, FunctionSioOutput, Pin};
+use hal::gpio::{FunctionSioOutput, Pin};
 use hal::pac::interrupt;
 use hal::pio::PIOExt;
 use hal::Sio;
 
-use embedded_hal::delay::DelayNs;
 use embedded_hal::digital::StatefulOutputPin;
 
 use core::sync::atomic::{AtomicBool, Ordering};
@@ -27,13 +26,10 @@ static PIO_IRQ_FLAG: AtomicBool = AtomicBool::new(false);
 
 #[interrupt]
 fn PIO0_IRQ_0() {
-    clear_irq0();
-    PIO_IRQ_FLAG.store(true, Ordering::Release);
-}
+    let pio0 = unsafe { &*hal::pac::PIO0::ptr() };
+    pio0.irq().write(|w| unsafe { w.bits(1 << 0) });
 
-fn clear_irq0() {
-    let pio = unsafe { &*hal::pac::PIO0::ptr() };
-    pio.irq().write(|w| unsafe { w.bits(1 << 0) });
+    PIO_IRQ_FLAG.store(true, Ordering::Release);
 }
 
 #[hal::entry]
@@ -41,7 +37,7 @@ fn main() -> ! {
     let mut pac = hal::pac::Peripherals::take().unwrap();
 
     let mut watchdog = hal::Watchdog::new(pac.WATCHDOG);
-    let clocks = hal::clocks::init_clocks_and_plls(
+    let _clocks = hal::clocks::init_clocks_and_plls(
         XTAL_FREQ_HZ, 
         pac.XOSC, 
         pac.CLOCKS, 
@@ -50,12 +46,6 @@ fn main() -> ! {
         &mut pac.RESETS, 
         &mut watchdog
     ).unwrap();
-
-    let mut timer = hal::timer::Timer::new_timer0(
-        pac.TIMER0, 
-        &mut pac.RESETS, 
-        &clocks
-    );
 
     let sio = Sio::new(pac.SIO);
     let pins = hal::gpio::Pins::new(
@@ -68,9 +58,6 @@ fn main() -> ! {
     // LED (CPU control)
     let mut led: Pin<_, FunctionSioOutput, _> = pins.gpio25.into_push_pull_output();
 
-    // PIO (dummy: unused)
-    let _dummy: Pin<_, FunctionPio0, _> = pins.gpio0.into_function();
-
     let program = pio::pio_asm!(
         ".wrap_target",
         "   irq 0",
@@ -82,26 +69,22 @@ fn main() -> ! {
         ".wrap"
     );
 
-    let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
-    let installed = pio.install(&program.program).unwrap();
+    let (mut pio0, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let installed = pio0.install(&program.program).unwrap();
 
-    let (sm, _, _) = hal::pio::PIOBuilder::from_installed_program(installed)
+    let (sm0, _, _) = hal::pio::PIOBuilder::from_installed_program(installed)
         .clock_divisor_fixed_point(60000, 0) // 2500Hz
         .build(sm0);
-    
-    clear_irq0();
 
-    pio.irq0().enable_sm_interrupt(0);
+    pio0.irq0().enable_sm_interrupt(0);
 
     unsafe { NVIC::unmask(hal::pac::Interrupt::PIO0_IRQ_0); }
 
-    sm.start();
+    sm0.start();
 
     loop {
         if PIO_IRQ_FLAG.swap(false, Ordering::AcqRel) {
             led.toggle().unwrap();
         }
-
-        timer.delay_ms(1);
     }
 }

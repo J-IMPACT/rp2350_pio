@@ -61,21 +61,21 @@ fn main() -> ! {
         ".wrap"
     );
 
-    let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
-    let installed = pio.install(&program.program).unwrap();
+    let (mut pio0, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let installed = pio0.install(&program.program).unwrap();
 
-    let (mut sm, mut rx, _) = hal::pio::PIOBuilder::from_installed_program(installed)
+    let (mut sm0, mut rx0, _) = hal::pio::PIOBuilder::from_installed_program(installed)
         .in_pin_base(BUS_BASE_PIN)
         .in_shift_direction(ShiftDirection::Left) // default
         .push_threshold(32) // default
         .clock_divisor_fixed_point(60000, 0) // 2500Hz
         .build(sm0);
-    sm.set_pindirs((0..BUS_WIDTH as u8).map(|pin| (pin + BUS_BASE_PIN, hal::pio::PinDir::Input)));
-    sm.start();
+    sm0.set_pindirs((0..BUS_WIDTH as u8).map(|pin| (pin + BUS_BASE_PIN, hal::pio::PinDir::Input)));
+    sm0.start();
 
     let mut value = 0b0000;
     loop {
-        match rx.read() {
+        match rx0.read() {
             Some(v) => {
                 let mut flg = false;
                 for i in 0..8 {

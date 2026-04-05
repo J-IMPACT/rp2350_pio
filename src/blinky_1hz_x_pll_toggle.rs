@@ -54,15 +54,16 @@ fn main() -> ! {
         ".wrap"
     );
 
-    let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
-    let installed = pio.install(&program.program).unwrap();
+    let (mut pio0, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let installed = pio0.install(&program.program).unwrap();
+    
     let (int, frac) = (60000, 0); // 2500Hz
-    let (mut sm, _, _) = hal::pio::PIOBuilder::from_installed_program(installed)
+    let (mut sm0, _, _) = hal::pio::PIOBuilder::from_installed_program(installed)
         .out_pins(led_pin_id, 1) // set -> out
         .clock_divisor_fixed_point(int, frac)
         .build(sm0);
-    sm.set_pindirs([(led_pin_id, hal::pio::PinDir::Output)]);
-    sm.start();
+    sm0.set_pindirs([(led_pin_id, hal::pio::PinDir::Output)]);
+    sm0.start();
 
     loop {}
 }

@@ -59,27 +59,23 @@ fn main() -> ! {
         "   in pins, 4",
         "   mov osr, isr",
         "   out pins, 4",
-        "   set x, 31",
-        "delay:",
-        "   nop [31]",
-        "   nop [31]",
-        "   jmp x--, delay",
+        "   mov isr, null",
         ".wrap"
     );
 
-    let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
-    let installed = pio.install(&program.program).unwrap();
+    let (mut pio0, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let installed = pio0.install(&program.program).unwrap();
 
-    let (mut sm, _, _) = hal::pio::PIOBuilder::from_installed_program(installed)
+    let (mut sm0, _, _) = hal::pio::PIOBuilder::from_installed_program(installed)
         .in_pin_base(BUS_BASE_PIN_IN)
         .out_pins(BUS_BASE_PIN_OUT, BUS_WIDTH)
         .in_shift_direction(ShiftDirection::Left) // default
         .out_shift_direction(ShiftDirection::Right) // default
         .clock_divisor_fixed_point(60000, 0) // 2500Hz
         .build(sm0);
-    sm.set_pindirs((0..BUS_WIDTH as u8).map(|pin| (pin + BUS_BASE_PIN_IN, hal::pio::PinDir::Input)));
-    sm.set_pindirs((0..BUS_WIDTH as u8).map(|pin| (pin + BUS_BASE_PIN_OUT, hal::pio::PinDir::Output)));
-    sm.start();
+    sm0.set_pindirs((0..BUS_WIDTH as u8).map(|pin| (pin + BUS_BASE_PIN_IN, hal::pio::PinDir::Input)));
+    sm0.set_pindirs((0..BUS_WIDTH as u8).map(|pin| (pin + BUS_BASE_PIN_OUT, hal::pio::PinDir::Output)));
+    sm0.start();
 
     loop {}
 }
