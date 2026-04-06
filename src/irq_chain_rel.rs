@@ -84,9 +84,10 @@ fn main() -> ! {
         "   jmp x--, sm123_delay1",
         ".wrap"
     );
-    let (mut pio, sm0, sm1, sm2, sm3) = pac.PIO0.split(&mut pac.RESETS);
-    let installed_sm0 = pio.install(&program_sm0.program).unwrap();
-    let installed_sm1 = pio.install(&program_sm123.program).unwrap();
+
+    let (mut pio0, sm0, sm1, sm2, sm3) = pac.PIO0.split(&mut pac.RESETS);
+    let installed_sm0 = pio0.install(&program_sm0.program).unwrap();
+    let installed_sm1 = pio0.install(&program_sm123.program).unwrap();
     let installed_sm2 = unsafe { installed_sm1.share() };
     let installed_sm3 = unsafe { installed_sm1.share() };
 
@@ -114,15 +115,10 @@ fn main() -> ! {
         .build(sm3);
     sm3.set_pindirs([(9, hal::pio::PinDir::Output)]);
 
-    // let pio_reg = unsafe { &*hal::pac::PIO0::ptr() };
-    // pio_reg.irq().write(|w| unsafe { w.bits(1 << 3 | 1 << 2 | 1 << 1 | 1 << 0) });
-
     sm0.start();
     sm1.start();
     sm2.start();
     sm3.start();
 
-    loop {
-        
-    }
+    loop {}
 }

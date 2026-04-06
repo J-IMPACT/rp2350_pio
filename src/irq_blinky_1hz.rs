@@ -22,14 +22,14 @@ pub static IMAGE_DEF: hal::block::ImageDef = hal::block::ImageDef::secure_exe();
 const XTAL_FREQ_HZ: u32 = 12_000_000u32;
 
 // IRQ Flag
-static PIO_IRQ_FLAG: AtomicBool = AtomicBool::new(false);
+static PIO0_IRQ0_FLAG: AtomicBool = AtomicBool::new(false);
 
 #[interrupt]
 fn PIO0_IRQ_0() {
     let pio0 = unsafe { &*hal::pac::PIO0::ptr() };
     pio0.irq().write(|w| unsafe { w.bits(1 << 0) });
 
-    PIO_IRQ_FLAG.store(true, Ordering::Release);
+    PIO0_IRQ0_FLAG.store(true, Ordering::Release);
 }
 
 #[hal::entry]
@@ -83,7 +83,7 @@ fn main() -> ! {
     sm0.start();
 
     loop {
-        if PIO_IRQ_FLAG.swap(false, Ordering::AcqRel) {
+        if PIO0_IRQ0_FLAG.swap(false, Ordering::AcqRel) {
             led.toggle().unwrap();
         }
     }

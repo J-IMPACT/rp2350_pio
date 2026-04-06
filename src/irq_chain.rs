@@ -29,6 +29,7 @@ static PIO0_IRQ1_FLAG: AtomicBool = AtomicBool::new(false);
 fn PIO0_IRQ_0() {
     let pio = unsafe { &*hal::pac::PIO0::ptr() };
     pio.irq().write(|w| unsafe { w.bits(1 << 1) });
+
     PIO0_IRQ1_FLAG.store(true, Ordering::Release);
 }
 
@@ -110,9 +111,9 @@ fn main() -> ! {
         ".wrap"
     );
 
-    let (mut pio, sm0, sm1, _, _) = pac.PIO0.split(&mut pac.RESETS);
-    let installed_sm0 = pio.install(&program_sm0.program).unwrap();
-    let installed_sm1 = pio.install(&program_sm1.program).unwrap();
+    let (mut pio0, sm0, sm1, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let installed_sm0 = pio0.install(&program_sm0.program).unwrap();
+    let installed_sm1 = pio0.install(&program_sm1.program).unwrap();
 
     let (mut sm0, _, _) = hal::pio::PIOBuilder::from_installed_program(installed_sm0)
         .set_pins(6, 1)
@@ -126,10 +127,7 @@ fn main() -> ! {
         .build(sm1);
     sm1.set_pindirs([(7, hal::pio::PinDir::Output)]);
 
-    // let pio_reg = unsafe { &*hal::pac::PIO0::ptr() };
-    // pio_reg.irq().write(|w| unsafe { w.bits(1 << 1 | 1 << 0) });
-
-    pio.irq0().enable_sm_interrupt(1);
+    pio0.irq0().enable_sm_interrupt(1);
 
     unsafe { NVIC::unmask(hal::pac::Interrupt::PIO0_IRQ_0); }
 

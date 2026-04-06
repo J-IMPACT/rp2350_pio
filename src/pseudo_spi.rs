@@ -72,7 +72,6 @@ fn main() -> ! {
 
     let master_prog = pio::pio_asm!(
         ".side_set 1 opt",
-        "set pindirs, 0b11",
         ".wrap_target",
         "   pull block",
         "   set x, 3",
@@ -84,7 +83,6 @@ fn main() -> ! {
     );
 
     let slave_prog = pio::pio_asm!(
-        "set pindirs, 0b1111",
         ".wrap_target",
         "   set x, 3",
         "   mov isr, null",
@@ -97,44 +95,34 @@ fn main() -> ! {
         ".wrap"
     );
 
-    let (mut pio, sm0, sm1, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let (mut pio0, sm0, sm1, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let master_inst = pio0.install(&master_prog.program).unwrap();
+    let slave_inst = pio0.install(&slave_prog.program).unwrap();
 
-    let master_inst = pio.install(&master_prog.program).unwrap();
-    let slave_inst = pio.install(&slave_prog.program).unwrap();
-
-    let (sm_master, _, mut tx_master) = hal::pio::PIOBuilder::from_installed_program(master_inst)
+    let (mut sm_master, _, mut tx_master) = hal::pio::PIOBuilder::from_installed_program(master_inst)
         .out_pins(0, 1)
         .side_set_pin_base(1)
         .clock_divisor_fixed_point(1, 0)
         .build(sm0);
+    sm_master.set_pindirs((0..2).map(|pin| (pin, hal::pio::PinDir::Output)));
     
-    let (sm_slave, _, _) = hal::pio::PIOBuilder::from_installed_program(slave_inst)
+    let (mut sm_slave, _, _) = hal::pio::PIOBuilder::from_installed_program(slave_inst)
         .in_pin_base(2)
         .in_shift_direction(ShiftDirection::Left) // default
         .set_pins(6, 4)
         .clock_divisor_fixed_point(1, 0)
         .build(sm1);
+    sm_slave.set_pindirs((2..4).map(|pin| (pin, hal::pio::PinDir::Input)));
+    sm_slave.set_pindirs((6..10).map(|pin| (pin, hal::pio::PinDir::Output)));
 
     sm_master.start();
     sm_slave.start();
 
     let patterns: [u32; 16] = [
-        0b0000,
-        0b0001,
-        0b0010,
-        0b0011,
-        0b0100,
-        0b0101,
-        0b0110,
-        0b0111,
-        0b1000,
-        0b1001,
-        0b1010,
-        0b1011,
-        0b1100,
-        0b1101,
-        0b1110,
-        0b1111,
+        0b0000, 0b0001, 0b0010, 0b0011,
+        0b0100, 0b0101, 0b0110, 0b0111,
+        0b1000, 0b1001, 0b1010, 0b1011,
+        0b1100, 0b1101, 0b1110, 0b1111,
     ];
 
     loop {
