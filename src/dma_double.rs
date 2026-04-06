@@ -121,7 +121,71 @@ fn main() -> ! {
         }
     });
 
+    let (idx0, idx1) = critical_section::with(|cs| {
+        let mut fq = FREE_Q.borrow_ref_mut(cs);
+        (fq.dequeue().unwrap(), fq.dequeue().unwrap())
+    });
+
+    unsafe {
+        for i in 0..16 {
+            buf_mut(idx0)[i] = i as u32;
+            buf_mut(idx1)[i] = (15 - i) as u32;
+        }
+    }
+
+    let mut dma_cur_idx = idx0;
+    let mut dma_next_idx = idx1;
+
+    let mut transfer = unsafe {
+        double_buffer::Config::new(
+            (ch0, ch1), 
+            buf_mut(idx0), 
+            tx0
+        )
+        .start()
+        .read_next(buf_mut(idx1))
+    };
+
     loop {
-        
+        if DMA_DONE.swap(false, Ordering::AcqRel) {
+            let (_finished_buf, next) = transfer.wait();
+
+            let finished = dma_cur_idx;
+            dma_cur_idx = dma_next_idx;
+
+            // To READY
+            critical_section::with(|cs| {
+                let mut rq = READY_Q.borrow_ref_mut(cs);
+                let _ = rq.enqueue(finished);
+            });
+
+            // Get next buffer
+            let next_idx = critical_section::with(|cs| {
+                let mut fq = FREE_Q.borrow_ref_mut(cs);
+                fq.dequeue().unwrap_or(finished)
+            });
+
+            // Update buffer
+            unsafe {
+                for i in 0..16 {
+                    buf_mut(next_idx)[i] = ((i + next_idx) & 0x0F) as u32;
+                }
+            }
+
+            dma_next_idx = next_idx;
+
+            transfer = unsafe {
+                next.read_next(buf_mut(next_idx))
+            };
+
+            // Consume
+            critical_section::with(|cs| {
+                let mut rq = READY_Q.borrow_ref_mut(cs);
+                if let Some(idx) = rq.dequeue() {
+                    let mut fq = FREE_Q.borrow_ref_mut(cs);
+                    let _ = fq.enqueue(idx);
+                }
+            })
+        }
     }
 }
