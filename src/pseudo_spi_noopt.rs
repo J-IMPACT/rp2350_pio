@@ -1,12 +1,11 @@
 #![no_std]
 #![no_main]
 
-use embedded_hal::digital::OutputPin;
 use panic_halt as _;
 
 use rp235x_hal as hal;
 
-use hal::gpio::{FunctionPio0, FunctionSioOutput, Pin};
+use hal::gpio::{FunctionPio0, Pin};
 use hal::pio::{PIOExt, ShiftDirection};
 use hal::Sio;
 
@@ -66,21 +65,20 @@ fn main() -> ! {
     let _mosi_in: Pin<_, FunctionPio0, _> = pins.gpio2.into_function();
     let _clk_in: Pin<_, FunctionPio0, _> = pins.gpio3.into_function();
 
-    let mut led0: Pin<_, FunctionSioOutput, _> = pins.gpio6.into_push_pull_output();
-    let mut led1: Pin<_, FunctionSioOutput, _> = pins.gpio7.into_push_pull_output();
-    let mut led2: Pin<_, FunctionSioOutput, _> = pins.gpio8.into_push_pull_output();
-    let mut led3: Pin<_, FunctionSioOutput, _> = pins.gpio9.into_push_pull_output();
+    let _led0: Pin<_, FunctionPio0, _> = pins.gpio6.into_function();
+    let _led1: Pin<_, FunctionPio0, _> = pins.gpio7.into_function();
+    let _led2: Pin<_, FunctionPio0, _> = pins.gpio8.into_function();
+    let _led3: Pin<_, FunctionPio0, _> = pins.gpio9.into_function();
 
     let master_prog = pio::pio_asm!(
-        ".side_set 1 opt",
-        "set pindirs, 0b11",
+        ".side_set 1",
         ".wrap_target",
-        "   pull block",
-        "   set x, 3",
+        "   pull block side 1",
+        "   set x, 3 side 1",
         "bitloop:",
-        "   out pins, 1 side 0 [7]",
-        "   nop side 1 [7]",
-        "   jmp x-- bitloop",
+        "   out pins, 1 side 0 [15]",
+        "   nop side 1 [15]",
+        "   jmp x-- bitloop side 1",
         ".wrap"
     );
 
@@ -93,66 +91,44 @@ fn main() -> ! {
         "   in pins, 1",
         "   wait 0 pin 1",
         "   jmp x-- bitloop",
-        "   push block",
+        "   mov pins, isr",
         ".wrap"
     );
 
-    let (mut pio, sm0, sm1, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let (mut pio0, sm0, sm1, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let master_inst = pio0.install(&master_prog.program).unwrap();
+    let slave_inst = pio0.install(&slave_prog.program).unwrap();
 
-    let master_inst = pio.install(&master_prog.program).unwrap();
-    let slave_inst = pio.install(&slave_prog.program).unwrap();
-
-    let (sm_master, _, mut tx_master) = hal::pio::PIOBuilder::from_installed_program(master_inst)
+    let (mut sm_master, _, mut tx_master) = hal::pio::PIOBuilder::from_installed_program(master_inst)
         .out_pins(0, 1)
         .side_set_pin_base(1)
         .clock_divisor_fixed_point(1, 0)
         .build(sm0);
+    sm_master.set_pindirs((0..2).map(|pin| (pin, hal::pio::PinDir::Output)));
     
-    let (sm_slave, mut rx_slave, _) = hal::pio::PIOBuilder::from_installed_program(slave_inst)
+    let (mut sm_slave, _, _) = hal::pio::PIOBuilder::from_installed_program(slave_inst)
         .in_pin_base(2)
         .in_shift_direction(ShiftDirection::Left) // default
+        .out_pins(6, 4)
         .clock_divisor_fixed_point(1, 0)
         .build(sm1);
+    sm_slave.set_pindirs((2..4).map(|pin| (pin, hal::pio::PinDir::Input)));
+    sm_slave.set_pindirs((6..10).map(|pin| (pin, hal::pio::PinDir::Output)));
 
     sm_master.start();
     sm_slave.start();
 
     let patterns: [u32; 16] = [
-        0b0000,
-        0b0001,
-        0b0010,
-        0b0011,
-        0b0100,
-        0b0101,
-        0b0110,
-        0b0111,
-        0b1000,
-        0b1001,
-        0b1010,
-        0b1011,
-        0b1100,
-        0b1101,
-        0b1110,
-        0b1111,
+        0b0000, 0b0001, 0b0010, 0b0011,
+        0b0100, 0b0101, 0b0110, 0b0111,
+        0b1000, 0b1001, 0b1010, 0b1011,
+        0b1100, 0b1101, 0b1110, 0b1111,
     ];
 
     loop {
         for &value in patterns.iter() {
             tx_master.write(value);
-            timer.delay_ms(500);
-
-            match rx_slave.read() {
-                Some(v) => {
-                    let data = v & 0xF;
-
-                    if data & 0b0001 != 0 { led0.set_high().unwrap(); } else { led0.set_low().unwrap(); }
-                    if data & 0b0010 != 0 { led1.set_high().unwrap(); } else { led1.set_low().unwrap(); }
-                    if data & 0b0100 != 0 { led2.set_high().unwrap(); } else { led2.set_low().unwrap(); }
-                    if data & 0b1000 != 0 { led3.set_high().unwrap(); } else { led3.set_low().unwrap(); }
-                }
-                None => {}
-            }
-            timer.delay_ms(500);
+            timer.delay_ms(1000);
         }
     }
 }

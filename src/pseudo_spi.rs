@@ -109,7 +109,7 @@ fn main() -> ! {
     let (mut sm_slave, _, _) = hal::pio::PIOBuilder::from_installed_program(slave_inst)
         .in_pin_base(2)
         .in_shift_direction(ShiftDirection::Left) // default
-        .set_pins(6, 4)
+        .out_pins(6, 4)
         .clock_divisor_fixed_point(1, 0)
         .build(sm1);
     sm_slave.set_pindirs((2..4).map(|pin| (pin, hal::pio::PinDir::Input)));

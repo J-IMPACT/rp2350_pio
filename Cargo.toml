@@ -78,36 +78,17 @@ name = "blinky_1hz_x_pll_toggle"
 path = "src/blinky_1hz_x_pll_toggle.rs"
 
 [[bin]]
+name = "parallel_in_out_mov"
+path = "src/parallel_in_out_mov.rs"
+
+[[bin]]
 name = "blinky_30pin_pll"
 path = "src/blinky_30pin_pll.rs"
-
-
-
-[[bin]]
-name = "blinky_1hz_x_pll_exec"
-path = "src/blinky_1hz_x_pll_exec.rs"
-
-[[bin]]
-name = "blinky_1hz_x_pll_pc"
-path = "src/blinky_1hz_x_pll_pc.rs"
 
 [[bin]]
 name = "blinky_1hz_sync"
 path = "src/blinky_1hz_sync.rs"
 
-
-
-[[bin]]
-name = "pseudo_spi"
-path = "src/pseudo_spi.rs"
-
-[[bin]]
-name = "pseudo_spi_push"
-path = "src/pseudo_spi_push.rs"
-
-[[bin]]
-name = "dma_stream"
-path = "src/dma_stream.rs"
 
 [[bin]]
 name = "irq_blinky_1hz"
@@ -122,32 +103,12 @@ name = "irq_chain_rel"
 path = "src/irq_chain_rel.rs"
 
 [[bin]]
-name = "irq_chain_block"
-path = "src/irq_chain_block.rs"
+name = "pseudo_spi"
+path = "src/pseudo_spi.rs"
 
 [[bin]]
-name = "wait_jmppin"
-path = "src/wait_jmppin.rs"
-
-[[bin]]
-name = "parallel_out_mov"
-path = "src/parallel_out_mov.rs"
-
-
-
-[[bin]]
-name = "parallel_out_expression"
-path = "src/parallel_out_expression.rs"
-
-
-
-[[bin]]
-name = "parallel_in_out_mov"
-path = "src/parallel_in_out_mov.rs"
-
-[[bin]]
-name = "mov_rx_fifo"
-path = "src/mov_rx_fifo.rs"
+name = "pseudo_spi_noopt"
+path = "src/pseudo_spi_noopt.rs"
 
 [[bin]]
 name = "blinky_dualcore"
@@ -164,3 +125,38 @@ path = "src/dma_single.rs"
 [[bin]]
 name = "dma_double"
 path = "src/dma_double.rs"
+
+
+
+[[bin]]
+name = "blinky_1hz_x_pll_exec"
+path = "src/blinky_1hz_x_pll_exec.rs"
+
+[[bin]]
+name = "blinky_1hz_x_pll_pc"
+path = "src/blinky_1hz_x_pll_pc.rs"
+
+[[bin]]
+name = "dma_stream"
+path = "src/dma_stream.rs"
+
+[[bin]]
+name = "irq_chain_block"
+path = "src/irq_chain_block.rs"
+
+[[bin]]
+name = "wait_jmppin"
+path = "src/wait_jmppin.rs"
+
+[[bin]]
+name = "parallel_out_mov"
+path = "src/parallel_out_mov.rs"
+
+[[bin]]
+name = "parallel_out_expression"
+path = "src/parallel_out_expression.rs"
+
+[[bin]]
+name = "mov_rx_fifo"
+path = "src/mov_rx_fifo.rs"
+
