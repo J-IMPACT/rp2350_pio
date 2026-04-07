@@ -12,8 +12,11 @@ use hal::Sio;
 use hal::pac;
 use pac::interrupt;
 
+use core::cell::{RefCell, UnsafeCell};
 use core::sync::atomic::{AtomicBool, Ordering};
 use cortex_m::peripheral::NVIC;
+use critical_section::Mutex;
+use heapless::spsc::Queue;
 
 #[unsafe(link_section = ".start_block")]
 #[used]
@@ -21,22 +24,38 @@ pub static IMAGE_DEF: hal::block::ImageDef = hal::block::ImageDef::secure_exe();
 
 const XTAL_FREQ_HZ: u32 = 12_000_000u32;
 
+const N_BUFS: usize = 4;
+
 // ===== DMA complete flag =====
 static DMA_DONE: AtomicBool = AtomicBool::new(false);
 
-// ===== Doubl buffer =====
-static BUF0: [u32; 16] = [
-    0b0000, 0b0001, 0b0010, 0b0011, 
-    0b0100, 0b0101, 0b0110, 0b0111, 
-    0b1000, 0b1001, 0b1010, 0b1011, 
-    0b1100, 0b1101, 0b1110, 0b1110,
-];
-static BUF1: [u32; 16] = [
-    0b1010, 0b0101, 0b1010, 0b0101, 
-    0b1010, 0b0101, 0b1010, 0b0101, 
-    0b1010, 0b0101, 0b1010, 0b0101, 
-    0b1010, 0b0101, 0b1010, 0b0101, 
-];
+// ===== Buffer pool =====
+struct Pool(UnsafeCell<[[u32; 16]; N_BUFS]>);
+unsafe impl Sync for Pool {}
+
+static POOL: Pool = Pool(UnsafeCell::new([[0; 16]; N_BUFS]));
+
+// ===== Queue =====
+static FREE_Q: Mutex<RefCell<Queue<usize, N_BUFS>>> = Mutex::new(RefCell::new(Queue::new()));
+static READY_Q: Mutex<RefCell<Queue<usize, N_BUFS>>> = Mutex::new(RefCell::new(Queue::new()));
+
+fn buf_mut(idx: usize) -> &'static mut [u32; 16] {
+    unsafe { &mut (*POOL.0.get())[idx] }
+}
+
+fn set_data(idx: usize, count: u32) {
+    for i in 0..8 {
+        buf_mut(idx)[2*i] = 0;
+        buf_mut(idx)[2*i+1] = count;
+    }
+}
+
+fn set_error(idx: usize) {
+    for i in 0..8 {
+        buf_mut(idx)[2*i] = 0b1010;
+        buf_mut(idx)[2*i+1] = 0b0101;
+    }
+}
 
 #[interrupt]
 fn DMA_IRQ_0() {
@@ -105,27 +124,69 @@ fn main() -> ! {
 
     unsafe { NVIC::unmask(pac::Interrupt::DMA_IRQ_0) };
 
-    let mut use_buf0 = true;
+    // ===== Initialize =====
+    for i in 0..N_BUFS { set_data(i, i as u32); }
+    let mut count = N_BUFS as u32;
+
+    critical_section::with(|cs| {
+        let mut rq = READY_Q.borrow_ref_mut(cs);
+        for i in 0..N_BUFS {
+            let _ = rq.enqueue(i);
+        }
+    });
+
+    let (idx0, idx1) = critical_section::with(|cs| {
+        let mut rq = READY_Q.borrow_ref_mut(cs);
+        (rq.dequeue().unwrap(), rq.dequeue().unwrap())
+    });
+
+    let mut dma_cur_idx = idx0;
+    let mut dma_next_idx = idx1;
 
     let mut transfer = double_buffer::Config::new(
         (ch0, ch1), 
-        &BUF0, 
+        buf_mut(idx0), 
         tx0
     )
     .start()
-    .read_next(&BUF1);
+    .read_next(buf_mut(idx1));
 
     loop {
+        if let Some(free_idx) = critical_section::with(|cs| {
+            let mut fq = FREE_Q.borrow_ref_mut(cs);
+            fq.dequeue()
+        }) {
+            set_data(free_idx, count);
+            count = count.wrapping_add(1) & 0x0F;
+            critical_section::with(|cs| {
+                let mut rq = READY_Q.borrow_ref_mut(cs);
+                let _ = rq.enqueue(free_idx);
+            });
+        }
+
         if DMA_DONE.swap(false, Ordering::AcqRel) {
             let (_finished, next) = transfer.wait();
 
-            transfer = if use_buf0 {
-                use_buf0 = false;
-                next.read_next(&BUF0)
+            let finished_idx = dma_cur_idx;
+            dma_cur_idx = dma_next_idx;
+
+            if let Some(next_idx) = critical_section::with(|cs| {
+                let mut rq = READY_Q.borrow_ref_mut(cs);
+                rq.dequeue()
+            }) {
+                dma_next_idx = next_idx;
+
+                // To FREE
+                critical_section::with(|cs| {
+                    let mut fq = FREE_Q.borrow_ref_mut(cs);
+                    let _ = fq.enqueue(finished_idx);
+                });
             } else {
-                use_buf0 = true;
-                next.read_next(&BUF1)
+                set_error(finished_idx);
+                dma_next_idx = finished_idx;
             }
+
+            transfer = next.read_next(buf_mut(dma_next_idx));
         }
     }
 }

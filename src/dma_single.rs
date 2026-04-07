@@ -16,6 +16,14 @@ pub static IMAGE_DEF: hal::block::ImageDef = hal::block::ImageDef::secure_exe();
 
 const XTAL_FREQ_HZ: u32 = 12_000_000u32;
 
+// LED Pattern (4bit -> GPIO6-9)
+static BUF: [u32; 16] = [
+    0b0000, 0b0001, 0b0010, 0b0011, 
+    0b0100, 0b0101, 0b0110, 0b0111, 
+    0b1000, 0b1001, 0b1010, 0b1011, 
+    0b1100, 0b1101, 0b1110, 0b1110,
+];
+
 #[hal::entry]
 fn main() -> ! {
     let mut pac = hal::pac::Peripherals::take().unwrap();
@@ -65,25 +73,17 @@ fn main() -> ! {
     sm0.set_pindirs((6..10).map(|pin| (pin, hal::pio::PinDir::Output)));
     sm0.start();
 
-    // LED Pattern (4bit -> GPIO6-9)
-    static PATTERN: [u32; 16] = [
-        0b0000, 0b0001, 0b0010, 0b0011, 
-        0b0100, 0b0101, 0b0110, 0b0111, 
-        0b1000, 0b1001, 0b1010, 0b1011, 
-        0b1100, 0b1101, 0b1110, 0b1110,
-    ];
-
     // DMA
     let dma = pac.DMA.split(&mut pac.RESETS);
     let ch0 = dma.ch0;
 
     // single buffer DMA (PATTERN -> PIO TX-FIFO)
-    let mut transfer = single_buffer::Config::new(ch0, &PATTERN, tx0).start();
+    let mut transfer = single_buffer::Config::new(ch0, &BUF, tx0).start();
 
     loop {
         let (ch0, _buf, tx0) = transfer.wait();
         
         // Restart
-        transfer = single_buffer::Config::new(ch0, &PATTERN, tx0).start();
+        transfer = single_buffer::Config::new(ch0, &BUF, tx0).start();
     }
 }

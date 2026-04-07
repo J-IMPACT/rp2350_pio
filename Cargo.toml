@@ -126,7 +126,9 @@ path = "src/dma_single.rs"
 name = "dma_double"
 path = "src/dma_double.rs"
 
-
+[[bin]]
+name = "dma_double_queue"
+path = "src/dma_double_queue.rs"
 
 [[bin]]
 name = "blinky_1hz_x_pll_exec"
