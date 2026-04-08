@@ -111,7 +111,5 @@ fn main() -> ! {
     pio0_sm0.start();
     pio1_sm0.start();
 
-    loop {
-        
-    }
+    loop {}
 }

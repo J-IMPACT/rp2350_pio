@@ -63,15 +63,15 @@ fn main() -> ! {
         ".wrap"
     );
 
-    let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
-    let installed = pio.install(&program.program).unwrap();
+    let (mut pio0, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let installed = pio0.install(&program.program).unwrap();
 
-    let (sm, _, mut tx) = hal::pio::PIOBuilder::from_installed_program(installed)
+    let (sm0, _, mut tx0) = hal::pio::PIOBuilder::from_installed_program(installed)
         .out_pins(BUS_BASE_PIN, BUS_WIDTH)
         .out_shift_direction(ShiftDirection::Right) // default
         .clock_divisor_fixed_point(60000, 0) // 2500Hz
         .build(sm0);
-    sm.start();
+    sm0.start();
 
     let patterns: [u32; 2] = [
         0b0111_0110_0101_0100_0011_0010_0001_0000,
@@ -80,8 +80,8 @@ fn main() -> ! {
 
     loop {
         for &value in patterns.iter() {
-            while tx.is_full() {}
-            tx.write(value);
+            while tx0.is_full() {}
+            tx0.write(value);
         }
     }
 }
