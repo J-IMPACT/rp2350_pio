@@ -9,8 +9,7 @@ use hal::dma::{DMAExt, double_buffer, SingleChannel};
 use hal::gpio::{FunctionPio0, Pin};
 use hal::pio::PIOExt;
 use hal::Sio;
-use hal::pac;
-use pac::interrupt;
+use hal::pac::interrupt;
 
 use core::cell::{RefCell, UnsafeCell};
 use core::sync::atomic::{AtomicBool, Ordering};
@@ -59,7 +58,7 @@ fn set_error(idx: usize) {
 
 #[interrupt]
 fn DMA_IRQ_0() {
-    let dma = unsafe { &*pac::DMA::ptr() };
+    let dma = unsafe { &*hal::pac::DMA::ptr() };
     dma.ints0().write(|w| unsafe { w.bits((1 << 0) | (1 << 1)) });
 
     DMA_DONE.store(true, Ordering::Release);
@@ -122,7 +121,7 @@ fn main() -> ! {
     ch0.enable_irq0();
     ch1.enable_irq0();
 
-    unsafe { NVIC::unmask(pac::Interrupt::DMA_IRQ_0) };
+    unsafe { NVIC::unmask(hal::pac::Interrupt::DMA_IRQ_0) };
 
     // ===== Initialize =====
     for i in 0..N_BUFS { set_data(i, i as u32); }
