@@ -23,7 +23,7 @@ const XTAL_FREQ_HZ: u32 = 12_000_000u32;
 // ===== DMA complete flag =====
 static DMA_DONE: AtomicBool = AtomicBool::new(false);
 
-// ===== Doubl buffer =====
+// ===== Double buffer =====
 static BUF0: [u32; 16] = [
     0b0000, 0b0001, 0b0010, 0b0011, 
     0b0100, 0b0101, 0b0110, 0b0111, 

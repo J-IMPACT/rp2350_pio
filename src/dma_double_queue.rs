@@ -29,28 +29,29 @@ const N_BUFS: usize = 4;
 static DMA_DONE: AtomicBool = AtomicBool::new(false);
 
 // ===== Buffer pool =====
-struct Pool(UnsafeCell<[[u32; 16]; N_BUFS]>);
+struct Pool(UnsafeCell<[[u32; 8]; N_BUFS]>);
 unsafe impl Sync for Pool {}
 
-static POOL: Pool = Pool(UnsafeCell::new([[0; 16]; N_BUFS]));
+static POOL: Pool = Pool(UnsafeCell::new([[0; 8]; N_BUFS]));
 
 // ===== Queue =====
-static FREE_Q: Mutex<RefCell<Queue<usize, N_BUFS>>> = Mutex::new(RefCell::new(Queue::new()));
-static READY_Q: Mutex<RefCell<Queue<usize, N_BUFS>>> = Mutex::new(RefCell::new(Queue::new()));
+const Q_SIZE: usize = N_BUFS + 1;
+static FREE_Q: Mutex<RefCell<Queue<usize, Q_SIZE>>> = Mutex::new(RefCell::new(Queue::new()));
+static READY_Q: Mutex<RefCell<Queue<usize, Q_SIZE>>> = Mutex::new(RefCell::new(Queue::new()));
 
-fn buf_mut(idx: usize) -> &'static mut [u32; 16] {
+fn buf_mut(idx: usize) -> &'static mut [u32; 8] {
     unsafe { &mut (*POOL.0.get())[idx] }
 }
 
 fn set_data(idx: usize, count: u32) {
-    for i in 0..8 {
+    for i in 0..4 {
         buf_mut(idx)[2*i] = 0;
         buf_mut(idx)[2*i+1] = count;
     }
 }
 
 fn set_error(idx: usize) {
-    for i in 0..8 {
+    for i in 0..4 {
         buf_mut(idx)[2*i] = 0b1010;
         buf_mut(idx)[2*i+1] = 0b0101;
     }
