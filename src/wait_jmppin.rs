@@ -72,6 +72,7 @@ fn main() -> ! {
 
     let (mut pio0, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
     let installed = pio0.install(&program).unwrap();
+
     let (int, frac) = (60000, 0); // 2500Hz
     let (mut sm0, _, _) = hal::pio::PIOBuilder::from_installed_program(installed)
         .out_pins(led_pin_id, 1) // set -> out

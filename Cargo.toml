@@ -49,6 +49,8 @@ path = "src/blinky_1hz_xy_pll.rs"
 name = "blinky_1hz_xy"
 path = "src/blinky_1hz_xy.rs"
 
+
+
 [[bin]]
 name = "parallel_out"
 path = "src/parallel_out.rs"
@@ -85,10 +87,11 @@ path = "src/parallel_in_out_mov.rs"
 name = "blinky_30pin_pll"
 path = "src/blinky_30pin_pll.rs"
 
+
+
 [[bin]]
 name = "blinky_1hz_sync"
 path = "src/blinky_1hz_sync.rs"
-
 
 [[bin]]
 name = "irq_blinky_1hz"
@@ -110,6 +113,8 @@ path = "src/pseudo_spi.rs"
 name = "pseudo_spi_noopt"
 path = "src/pseudo_spi_noopt.rs"
 
+
+
 [[bin]]
 name = "blinky_dualcore"
 path = "src/blinky_dualcore.rs"
@@ -117,6 +122,8 @@ path = "src/blinky_dualcore.rs"
 [[bin]]
 name = "blinky_dualcore_queue"
 path = "src/blinky_dualcore_queue.rs"
+
+
 
 [[bin]]
 name = "dma_single"
@@ -130,21 +137,7 @@ path = "src/dma_double.rs"
 name = "dma_double_queue"
 path = "src/dma_double_queue.rs"
 
-[[bin]]
-name = "blinky_1hz_x_pll_exec"
-path = "src/blinky_1hz_x_pll_exec.rs"
 
-[[bin]]
-name = "blinky_1hz_x_pll_pc"
-path = "src/blinky_1hz_x_pll_pc.rs"
-
-[[bin]]
-name = "dma_stream"
-path = "src/dma_stream.rs"
-
-[[bin]]
-name = "irq_chain_block"
-path = "src/irq_chain_block.rs"
 
 [[bin]]
 name = "wait_jmppin"
@@ -155,10 +148,25 @@ name = "parallel_out_mov"
 path = "src/parallel_out_mov.rs"
 
 [[bin]]
-name = "parallel_out_expression"
-path = "src/parallel_out_expression.rs"
+name = "irq_chain_block"
+path = "src/irq_chain_block.rs"
 
 [[bin]]
 name = "mov_rx_fifo"
 path = "src/mov_rx_fifo.rs"
 
+
+
+[[bin]]
+name = "parallel_out_expression"
+path = "src/parallel_out_expression.rs"
+
+
+
+[[bin]]
+name = "blinky_1hz_x_pll_exec"
+path = "src/blinky_1hz_x_pll_exec.rs"
+
+[[bin]]
+name = "blinky_1hz_x_pll_pc"
+path = "src/blinky_1hz_x_pll_pc.rs"
