@@ -58,18 +58,18 @@ fn main() -> ! {
         ".wrap"
     );
 
-    let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
-    let installed = pio.install(&program.program).unwrap();
+    let (mut pio0, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let installed = pio0.install(&program.program).unwrap();
     let (int, frac) = (60000, 0); // 2500Hz
-    let (mut sm, _, mut tx) = hal::pio::PIOBuilder::from_installed_program(installed)
+    let (mut sm0, _, mut tx0) = hal::pio::PIOBuilder::from_installed_program(installed)
         .set_pins(led_pin_id, 1)
         .out_shift_direction(ShiftDirection::Right) // default
         .autopull(true)
         .pull_threshold(16)
         .clock_divisor_fixed_point(int, frac)
         .build(sm0);
-    sm.set_pindirs([(led_pin_id, hal::pio::PinDir::Output)]);
-    sm.start();
+    sm0.set_pindirs([(led_pin_id, hal::pio::PinDir::Output)]);
+    sm0.start();
 
     let patterns: [u32; 2] = [
         0b101_11110_010_00_010, // mov y, y [30]
@@ -78,8 +78,8 @@ fn main() -> ! {
 
     loop {
         for &value in patterns.iter() {
-            while tx.is_full() {}
-            tx.write(value);
+            while tx0.is_full() {}
+            tx0.write(value);
         }
     }
 }

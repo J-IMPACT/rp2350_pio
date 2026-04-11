@@ -65,17 +65,17 @@ fn main() -> ! {
         "   mov pc, y",         // 14
     );
 
-    let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
-    let installed = pio.install(&program.program).unwrap();
+    let (mut pio0, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let installed = pio0.install(&program.program).unwrap();
     let offset = installed.offset() as u32;
     let (int, frac) = (60000, 0); // 2500Hz
-    let (mut sm, _, mut tx) = hal::pio::PIOBuilder::from_installed_program(installed)
+    let (mut sm0, _, mut tx0) = hal::pio::PIOBuilder::from_installed_program(installed)
         .set_pins(led_pin_id, 1)
         .out_shift_direction(ShiftDirection::Right) // default
         .clock_divisor_fixed_point(int, frac)
         .build(sm0);
-    sm.set_pindirs([(led_pin_id, hal::pio::PinDir::Output)]);
-    sm.start();
+    sm0.set_pindirs([(led_pin_id, hal::pio::PinDir::Output)]);
+    sm0.start();
 
     let iter = program.public_defines.iter;
     let pattern_low = ((12 + offset) << 5) + 5 + offset;
@@ -83,12 +83,12 @@ fn main() -> ! {
 
     loop {
         for _ in 0..iter {
-            while tx.is_full() {}
-            tx.write(pattern_low);
+            while tx0.is_full() {}
+            tx0.write(pattern_low);
         }
         for _ in 0..iter {
-            while tx.is_full() {}
-            tx.write(pattern_high);
+            while tx0.is_full() {}
+            tx0.write(pattern_high);
         }
     }
 }
